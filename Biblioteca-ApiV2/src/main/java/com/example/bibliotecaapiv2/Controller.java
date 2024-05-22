@@ -9,6 +9,7 @@ import com.example.bibliotecaapiv2.enums.Status;
 import com.example.bibliotecaapiv2.files.BookFileManipulation;
 import com.example.bibliotecaapiv2.files.UserFileManipulation;
 import com.example.bibliotecaapiv2.services.BookServices;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,10 +22,14 @@ import java.util.List;
 
 @RestController
 public class Controller {
-    private final RestTemplate restTemplate;
 
-    public Controller() {
-        this.restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
+    private final BookServices bookServices;
+
+    @Autowired
+    public Controller(RestTemplate restTemplate, BookServices bookServices) {
+        this.restTemplate = restTemplate;
+        this.bookServices = bookServices;
     }
 
     @GetMapping("/sla")
@@ -36,7 +41,7 @@ public class Controller {
     @GetMapping("/teste-cep")
     @CrossOrigin(origins = "*")
     public Object consultaCep() {
-        String url = "https://brasilapi.com.br/api/cep/v1/" + "91530110";
+        String url = "https://brasilapi.com.br/api/cep/v1/91530110";
         return restTemplate.getForObject(url, Address.class);
     }
 
@@ -47,15 +52,13 @@ public class Controller {
                 .withStreet("Rua Exemplo")
                 .withCity("Porto Exemplo")
                 .withState("Grande Exemplo do Sul")
-                .withPostalCode("91530110") // Aqui definimos o CEP
+                .withPostalCode("91530110")
                 .build();
 
-        // Criando uma lista de livros favoritos
         List<BookCategory> favGenres = new ArrayList<>();
         favGenres.add(BookCategory.FICTION);
         favGenres.add(BookCategory.FANTASY);
 
-        // Criando um usuário usando o padrão Builder
         User user = new User.Builder()
                 .withUserName("Exemplo de Usuário")
                 .withBirthDate("01011990")
@@ -69,6 +72,7 @@ public class Controller {
                 .withUserFavGenres(favGenres)
                 .withUserAddress(address)
                 .build();
+
         UserFileManipulation registrate = new UserFileManipulation(user);
         registrate.writer();
         return user;
@@ -77,20 +81,25 @@ public class Controller {
     @GetMapping("/teste-book")
     @CrossOrigin(origins = "*")
     public Object consultaBook() throws IOException {
-        BookServices livro = new BookServices ();
-        livro.BookRegister("9788545702870");
-        BookFileManipulation registrate = new BookFileManipulation(livro.getBookReg());
+        bookServices.BookRegister("9788545702870");
+        BookFileManipulation registrate = new BookFileManipulation(bookServices.getBookReg());
         registrate.writer();
-        return  livro.getBookReg();
+        return bookServices.getBookReg();
+    }
+
+    @GetMapping("/teste-book-up")
+    @CrossOrigin(origins = "*")
+    public boolean uploadBook() throws IOException {
+        String isbn = "9788545702870";
+        return bookServices.BookUpload(isbn);
     }
 
     @GetMapping("/teste-book/{isbn}")
     @CrossOrigin(origins = "*")
     public Object consultaBookISBN(@PathVariable String isbn) throws IOException {
-        BookServices livro = new BookServices();
-        livro.BookRegister(isbn);
-        BookFileManipulation registrate = new BookFileManipulation(livro.getBookReg());
+        bookServices.BookRegister(isbn);
+        BookFileManipulation registrate = new BookFileManipulation(bookServices.getBookReg());
         registrate.writer();
-        return livro.getBookReg();
+        return bookServices.getBookReg();
     }
 }

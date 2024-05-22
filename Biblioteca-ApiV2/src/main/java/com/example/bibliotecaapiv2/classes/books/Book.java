@@ -2,9 +2,11 @@ package com.example.bibliotecaapiv2.classes.books;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 @Getter
 @Setter
+@Document(collection = "livros")
 public class Book {
     private String isbn;
     private String title;
